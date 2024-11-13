@@ -10,8 +10,17 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
 	Play::CreateManager( DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE );
 
-	SpawnBall(4, 0, 0);
+	SetupScene(2);
 
+	// 16248 limit
+
+	for (int i = 0; i < 1; i++)
+	{
+
+		SpawnBall(4, 0, 0);
+
+
+	}
 }
 
 // Called by PlayBuffer every frame (60 times a second!)
