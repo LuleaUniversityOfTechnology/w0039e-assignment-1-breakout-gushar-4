@@ -10,15 +10,14 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 {
 	Play::CreateManager( DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE );
 
-	SetupScene(2);
+	SetupScene(14);
 
 	// 16248 limit
 
 	for (int i = 0; i < 1; i++)
 	{
 
-		SpawnBall(4, 0, 0);
-
+		SpawnBall(4, 0, -70);
 
 	}
 }
