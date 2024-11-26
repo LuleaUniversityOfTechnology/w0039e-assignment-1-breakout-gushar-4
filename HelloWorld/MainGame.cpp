@@ -3,12 +3,15 @@
 #include "constants.h"
 #include "game.h"
 
+
 using namespace Play;
 
+
+
 // The entry point for a PlayBuffer program
-void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
+void MainGameEntry(PLAY_IGNORE_COMMAND_LINE)
 {
-	Play::CreateManager( DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE );
+	Play::CreateManager(DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE);
 
 	SetupScene(14);
 
@@ -26,7 +29,11 @@ void MainGameEntry( PLAY_IGNORE_COMMAND_LINE )
 bool MainGameUpdate( float elapsedTime )
 {
 	Play::ClearDrawingBuffer( Play::cBlack );
+
 	StepFrame(elapsedTime);
+
+	DrawPaddle();
+
 	Play::PresentDrawingBuffer();
 	return Play::KeyDown( KEY_ESCAPE );
 }

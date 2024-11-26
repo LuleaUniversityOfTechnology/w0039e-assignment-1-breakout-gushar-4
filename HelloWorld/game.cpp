@@ -3,6 +3,10 @@
 #include "Play.h"
 #include "constants.h"
 #include "game.h"
+#include "Paddle.h"
+
+Paddle paddle;
+
 
 
 void SpawnBall(float ballSpeed, int ballX, int ballY)
@@ -21,12 +25,15 @@ void SpawnBall(float ballSpeed, int ballX, int ballY)
 
 	//ball.velocity = normalize({ 0, -1 }) * ballSpeed;
 
-	ball.velocity = normalize({ ((float)Play::RandomRollRange(-400, 400) / 100.0f), 1 }) * ballSpeed;
+	ball.velocity = normalize({ ((float)Play::RandomRollRange(-80, 80) / 100.0f), -1 }) * ballSpeed;
 
 }
 
 void SetupScene(int range)
 {
+	paddle.x = DISPLAY_WIDTH / 2;
+	paddle.y = DISPLAY_HEIGHT / 10;
+
 	//Play::CreateGameObject(ObjectType::TYPE_BRICK, { DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 }, 6, "brick");
 	//Play::CreateGameObject(ObjectType::TYPE_BRICK, { DISPLAY_WIDTH / 2 + 20, DISPLAY_HEIGHT / 2 }, 6, "brick");
 
@@ -41,6 +48,65 @@ void SetupScene(int range)
 	}
 
 }
+
+void DrawPaddle()
+{
+	Play::Point2D RectBottom = { paddle.x + 50, paddle.y + 5 };
+
+	Play::Point2D RectTop = { paddle.x + -50, paddle.y + -5 };
+
+
+	if (Play::KeyDown(Play::KEY_LEFT) && !(paddle.x - 60 < 0))
+	{
+		paddle.x = paddle.x - 5;
+	}
+
+	else if (Play::KeyDown(Play::KEY_RIGHT) && !(paddle.x + 60 > DISPLAY_WIDTH))
+	{
+		paddle.x = paddle.x + 5;
+	}
+
+	Play::DrawRect(RectTop, RectBottom, Play::cWhite, true);
+}
+
+int Min(int x, int y)
+{
+	if (x < y)
+	{
+		return x;
+	}
+	else if (x > y)
+	{
+		return y;
+	}
+	else return y;
+}
+
+int Max(int x, int y)
+{
+	if (x > y)
+	{
+		return x;
+	}
+	else if (x > y)
+	{
+		return y;
+	}
+	else return y;
+}
+
+bool IsColliding(Play::GameObject& obj)
+{
+	Play::Point2D RectBottom = { paddle.x + 50, paddle.y + 5 };
+
+	Play::Point2D RectTop = { paddle.x - 50, paddle.y - 5 };
+
+	const float dx = obj.pos.x - Max(RectTop.x, Min(obj.pos.x, RectBottom.x));
+	const float dy = obj.pos.y - Max(RectTop.y, Min(obj.pos.y, RectBottom.y));
+
+	return (dx * dx + dy * dy) < (obj.radius * obj.radius);
+}
+
 
 
 Play::Vector2D randomNess(Play::Vector2D obj, bool randomizeY, int Ness)
@@ -79,6 +145,7 @@ void StepFrame(float elapsedTime)
 
 	const std::vector<int> BrickIds = Play::CollectGameObjectIDsByType(TYPE_BRICK);
 	
+	//balls
 	for (int i = 0; i < ballIds.size(); i++)
 	{
 		
@@ -91,6 +158,8 @@ void StepFrame(float elapsedTime)
 
 			object.velocity.x = -object.velocity.x;
 
+			//int soundID = Play::PlayAudio("error1");
+
 		}
 
 		else if (object.pos.x < 0 && object.velocity.x < 0) // left hand
@@ -100,6 +169,8 @@ void StepFrame(float elapsedTime)
 
 			object.velocity.x = -object.velocity.x;
 
+			//int soundID = Play::PlayAudio("error1");
+
 		}
 
 		if (object.pos.y > DISPLAY_HEIGHT -10 && object.velocity.y > 0) // top
@@ -108,6 +179,9 @@ void StepFrame(float elapsedTime)
 			object.velocity = randomNess(object.velocity, false, 40);
 
 			object.velocity.y = -object.velocity.y;
+
+			//int soundID = Play::PlayAudio("error1");
+
 		}
 
 		else if (object.pos.y < 0 && object.velocity.y < 0) // bottom
@@ -117,6 +191,13 @@ void StepFrame(float elapsedTime)
 
 			object.velocity.y = -object.velocity.y;
 
+			//int soundID = Play::PlayAudio("error1");
+
+		}
+
+		if (IsColliding(object))
+		{
+			object.velocity.y = -object.velocity.y;
 		}
 
 		Play::UpdateGameObject(object);
@@ -124,6 +205,7 @@ void StepFrame(float elapsedTime)
 		Play::DrawObject(object);
 	}
 	
+	//bricks
 	for (int i = 0; i < BrickIds.size(); i++)
 	{
 		Play::GameObject& brickObject = Play::GetGameObject(BrickIds[i]);
@@ -138,22 +220,18 @@ void StepFrame(float elapsedTime)
 			{
 				Play::UpdateGameObject(brickObject);
 
-				if (ballObject.pos.x < brickObject.pos.x && (ballObject.velocity.x < 0) || ballObject.pos.x > brickObject.pos.x && (ballObject.velocity.x > 0))
+				if (ballObject.pos.x <= brickObject.pos.x && (ballObject.velocity.x <= 0) || ballObject.pos.x >= brickObject.pos.x && (ballObject.velocity.x >= 0))
 				{
 					ballObject.velocity.y = -ballObject.velocity.y;
 					Play::DestroyGameObject(BrickIds[i]);
 				}
 
-				else if (ballObject.pos.y < brickObject.pos.y && (ballObject.velocity.y < 0) || ballObject.pos.y > brickObject.pos.y && (ballObject.velocity.y > 0))
+				else if (ballObject.pos.y <= brickObject.pos.y && (ballObject.velocity.y <= 0) || ballObject.pos.y >= brickObject.pos.y && (ballObject.velocity.y >= 0))
 				{
 					ballObject.velocity.x = -ballObject.velocity.x;
 					Play::DestroyGameObject(BrickIds[i]);
 				}
-
 			}
-
 		}
-		
-		
 	}
 }

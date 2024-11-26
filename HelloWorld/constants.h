@@ -6,7 +6,11 @@ const int DISPLAY_WIDTH = 640;
 const int DISPLAY_HEIGHT = 360;
 const int DISPLAY_SCALE = 2;
 
-
+struct Paddle
+{
+	int x;
+	int y;
+};
 
 enum ObjectType {
 	TYPE_BALL,
