@@ -7,7 +7,8 @@
 
 Paddle paddle;
 
-
+int score = 0;
+int scores[5];
 
 void SpawnBall(float ballSpeed, int ballX, int ballY)
 {
@@ -31,6 +32,8 @@ void SpawnBall(float ballSpeed, int ballX, int ballY)
 
 void SetupScene(int range)
 {
+
+
 	paddle.x = DISPLAY_WIDTH / 2;
 	paddle.y = DISPLAY_HEIGHT / 10;
 
@@ -59,6 +62,7 @@ void DrawPaddle()
 	if (Play::KeyDown(Play::KEY_LEFT) && !(paddle.x - 60 < 0))
 	{
 		paddle.x = paddle.x - 5;
+
 	}
 
 	else if (Play::KeyDown(Play::KEY_RIGHT) && !(paddle.x + 60 > DISPLAY_WIDTH))
@@ -141,6 +145,12 @@ Play::Vector2D randomNess(Play::Vector2D obj, bool randomizeY, int Ness)
 
 void StepFrame(float elapsedTime)
 {
+
+	std::string s = std::to_string(score);
+	char const* pchar = s.c_str();
+
+	Play::DrawDebugText({ paddle.x, paddle.y - 20}, pchar, Play::cMagenta, true);
+
 	const std::vector<int> ballIds = Play::CollectGameObjectIDsByType(TYPE_BALL);
 
 	const std::vector<int> BrickIds = Play::CollectGameObjectIDsByType(TYPE_BRICK);
@@ -159,6 +169,7 @@ void StepFrame(float elapsedTime)
 			object.velocity.x = -object.velocity.x;
 
 			//int soundID = Play::PlayAudio("error1");
+			//Play::ClearDrawingBuffer(Play::cWhite);
 
 		}
 
@@ -170,7 +181,7 @@ void StepFrame(float elapsedTime)
 			object.velocity.x = -object.velocity.x;
 
 			//int soundID = Play::PlayAudio("error1");
-
+			//Play::ClearDrawingBuffer(Play::cWhite);
 		}
 
 		if (object.pos.y > DISPLAY_HEIGHT -10 && object.velocity.y > 0) // top
@@ -181,7 +192,7 @@ void StepFrame(float elapsedTime)
 			object.velocity.y = -object.velocity.y;
 
 			//int soundID = Play::PlayAudio("error1");
-
+			//Play::ClearDrawingBuffer(Play::cWhite);
 		}
 
 		else if (object.pos.y < 0 && object.velocity.y < 0) // bottom
@@ -192,11 +203,12 @@ void StepFrame(float elapsedTime)
 			object.velocity.y = -object.velocity.y;
 
 			//int soundID = Play::PlayAudio("error1");
-
+			//Play::ClearDrawingBuffer(Play::cWhite);
 		}
 
 		if (IsColliding(object))
 		{
+			//Play::ClearDrawingBuffer(Play::cWhite);
 			object.velocity.y = -object.velocity.y;
 		}
 
@@ -224,12 +236,14 @@ void StepFrame(float elapsedTime)
 				{
 					ballObject.velocity.y = -ballObject.velocity.y;
 					Play::DestroyGameObject(BrickIds[i]);
+					score++;
 				}
 
 				else if (ballObject.pos.y <= brickObject.pos.y && (ballObject.velocity.y <= 0) || ballObject.pos.y >= brickObject.pos.y && (ballObject.velocity.y >= 0))
 				{
 					ballObject.velocity.x = -ballObject.velocity.x;
 					Play::DestroyGameObject(BrickIds[i]);
+					score++;
 				}
 			}
 		}
