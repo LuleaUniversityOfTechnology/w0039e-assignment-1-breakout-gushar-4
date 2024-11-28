@@ -3,12 +3,13 @@
 #include "Play.h"
 #include "constants.h"
 #include "game.h"
-#include "Paddle.h"
 
 Paddle paddle;
 
 int score = 0;
-int scores[5];
+int highScores[5] = {1,2,3,4,5};
+
+bool isAlive = true;
 
 void SpawnBall(float ballSpeed, int ballX, int ballY)
 {
@@ -26,13 +27,12 @@ void SpawnBall(float ballSpeed, int ballX, int ballY)
 
 	//ball.velocity = normalize({ 0, -1 }) * ballSpeed;
 
-	ball.velocity = normalize({ ((float)Play::RandomRollRange(-80, 80) / 100.0f), -1 }) * ballSpeed;
+	ball.velocity = normalize({ ((float)Play::RandomRollRange(-80, 80) / 100.0f), 1 }) * ballSpeed;
 
 }
 
 void SetupScene(int range)
 {
-
 
 	paddle.x = DISPLAY_WIDTH / 2;
 	paddle.y = DISPLAY_HEIGHT / 10;
@@ -40,7 +40,7 @@ void SetupScene(int range)
 	//Play::CreateGameObject(ObjectType::TYPE_BRICK, { DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 }, 6, "brick");
 	//Play::CreateGameObject(ObjectType::TYPE_BRICK, { DISPLAY_WIDTH / 2 + 20, DISPLAY_HEIGHT / 2 }, 6, "brick");
 
-	for (int i = -range; i < range; i++)
+	for (int i = -range; i < range + 1; i++)
 	{
 
 		for (int j = -range / 3; j < range / 3; j++)
@@ -54,21 +54,22 @@ void SetupScene(int range)
 
 void DrawPaddle()
 {
+	if (isAlive == true)
+	{
+		if (Play::KeyDown(Play::KEY_LEFT) && !(paddle.x - 60 < 0))
+		{
+			paddle.x = paddle.x - 5;
+		}
+
+		if (Play::KeyDown(Play::KEY_RIGHT) && !(paddle.x + 60 > DISPLAY_WIDTH))
+		{
+			paddle.x = paddle.x + 5;
+		}
+	}
+
 	Play::Point2D RectBottom = { paddle.x + 50, paddle.y + 5 };
 
 	Play::Point2D RectTop = { paddle.x + -50, paddle.y + -5 };
-
-
-	if (Play::KeyDown(Play::KEY_LEFT) && !(paddle.x - 60 < 0))
-	{
-		paddle.x = paddle.x - 5;
-
-	}
-
-	else if (Play::KeyDown(Play::KEY_RIGHT) && !(paddle.x + 60 > DISPLAY_WIDTH))
-	{
-		paddle.x = paddle.x + 5;
-	}
 
 	Play::DrawRect(RectTop, RectBottom, Play::cWhite, true);
 }
@@ -99,7 +100,7 @@ int Max(int x, int y)
 	else return y;
 }
 
-bool IsColliding(Play::GameObject& obj)
+bool IsPaddleColliding(Play::GameObject& obj)
 {
 	Play::Point2D RectBottom = { paddle.x + 50, paddle.y + 5 };
 
@@ -111,7 +112,38 @@ bool IsColliding(Play::GameObject& obj)
 	return (dx * dx + dy * dy) < (obj.radius * obj.radius);
 }
 
+void DrawScore()
+{
+	std::string s = std::to_string(score);
+	char const* pchar = s.c_str();
 
+	Play::DrawDebugText({ paddle.x, paddle.y - 20 }, pchar, Play::cMagenta, true);
+}
+
+void UpdateScore()
+{
+
+
+}
+
+void DrawEndScore()
+{
+	for (int i = 0; i < sizeof(highScores) / sizeof(highScores[0]); i++)
+	{
+		std::string s = std::to_string(highScores[i]);
+		char const* pchar = s.c_str();
+		Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3 + 30 + i * 20 }, pchar, Play::cWhite, true);
+	}
+}
+
+void DeathScreen()
+{
+
+	std::string s = "u died lol";
+	char const* pchar = s.c_str();
+	Play::DrawDebugText({ DISPLAY_WIDTH /2, DISPLAY_HEIGHT / 3 }, pchar, Play::cRed, true);
+
+}
 
 Play::Vector2D randomNess(Play::Vector2D obj, bool randomizeY, int Ness)
 {
@@ -126,126 +158,107 @@ Play::Vector2D randomNess(Play::Vector2D obj, bool randomizeY, int Ness)
 	return V;
 }
 
-//Play::Vector2D randomNess2(Play::Vector2D obj)
-//{
-//	Play::Vector2D V = obj;
-//	float m = V.Length();
-//	V.Normalize();
-//	float randomX = Play::RandomRollRange(400, 600) / 1000.0f;
-//	float randomY = Play::RandomRollRange(400, 600) / 1000.0f;
-//	//float randomY = 1 - randomX;
-//	Play::Vector2D Vout{ randomX, randomY };
-//	
-//	Vout.Normalize();
-//
-//	Vout *= m;
-//
-//	return Vout;
-//}
 
 void StepFrame(float elapsedTime)
 {
-
-	std::string s = std::to_string(score);
-	char const* pchar = s.c_str();
-
-	Play::DrawDebugText({ paddle.x, paddle.y - 20}, pchar, Play::cMagenta, true);
-
-	const std::vector<int> ballIds = Play::CollectGameObjectIDsByType(TYPE_BALL);
-
-	const std::vector<int> BrickIds = Play::CollectGameObjectIDsByType(TYPE_BRICK);
-	
-	//balls
-	for (int i = 0; i < ballIds.size(); i++)
+	if (isAlive == true)
 	{
-		
-		Play::GameObject& object = Play::GetGameObject(ballIds[i]);
+		const std::vector<int> ballIds = Play::CollectGameObjectIDsByType(TYPE_BALL);
 
-		if (object.pos.x > DISPLAY_WIDTH -10 && object.velocity.x > 0) //right hand
+		const std::vector<int> BrickIds = Play::CollectGameObjectIDsByType(TYPE_BRICK);
+
+		//balls
+		for (int i = 0; i < ballIds.size(); i++)
 		{
 
-			object.velocity = randomNess(object.velocity, true, 40);
+			Play::GameObject& object = Play::GetGameObject(ballIds[i]);
 
-			object.velocity.x = -object.velocity.x;
-
-			//int soundID = Play::PlayAudio("error1");
-			//Play::ClearDrawingBuffer(Play::cWhite);
-
-		}
-
-		else if (object.pos.x < 0 && object.velocity.x < 0) // left hand
-		{		
-
-			object.velocity = randomNess(object.velocity, true, 40);
-
-			object.velocity.x = -object.velocity.x;
-
-			//int soundID = Play::PlayAudio("error1");
-			//Play::ClearDrawingBuffer(Play::cWhite);
-		}
-
-		if (object.pos.y > DISPLAY_HEIGHT -10 && object.velocity.y > 0) // top
-		{
-
-			object.velocity = randomNess(object.velocity, false, 40);
-
-			object.velocity.y = -object.velocity.y;
-
-			//int soundID = Play::PlayAudio("error1");
-			//Play::ClearDrawingBuffer(Play::cWhite);
-		}
-
-		else if (object.pos.y < 0 && object.velocity.y < 0) // bottom
-		{
-
-			object.velocity = randomNess(object.velocity, false, 40);
-
-			object.velocity.y = -object.velocity.y;
-
-			//int soundID = Play::PlayAudio("error1");
-			//Play::ClearDrawingBuffer(Play::cWhite);
-		}
-
-		if (IsColliding(object))
-		{
-			//Play::ClearDrawingBuffer(Play::cWhite);
-			object.velocity.y = -object.velocity.y;
-		}
-
-		Play::UpdateGameObject(object);
-		
-		Play::DrawObject(object);
-	}
-	
-	//bricks
-	for (int i = 0; i < BrickIds.size(); i++)
-	{
-		Play::GameObject& brickObject = Play::GetGameObject(BrickIds[i]);
-		Play::DrawObject(brickObject);
-		Play::CentreAllSpriteOrigins();
-
-		for (int y = 0; y < ballIds.size(); y++)
-		{
-			Play::GameObject& ballObject = Play::GetGameObject(ballIds[y]);
-
-			if (Play::IsColliding(Play::GetGameObject(BrickIds[i]), Play::GetGameObject(ballIds[y])))
+			if (object.pos.x > DISPLAY_WIDTH - 10 && object.velocity.x > 0) //right hand
 			{
-				Play::UpdateGameObject(brickObject);
 
-				if (ballObject.pos.x <= brickObject.pos.x && (ballObject.velocity.x <= 0) || ballObject.pos.x >= brickObject.pos.x && (ballObject.velocity.x >= 0))
-				{
-					ballObject.velocity.y = -ballObject.velocity.y;
-					Play::DestroyGameObject(BrickIds[i]);
-					score++;
-				}
+				object.velocity = randomNess(object.velocity, true, 40);
 
-				else if (ballObject.pos.y <= brickObject.pos.y && (ballObject.velocity.y <= 0) || ballObject.pos.y >= brickObject.pos.y && (ballObject.velocity.y >= 0))
+				object.velocity.x = -object.velocity.x;
+
+			}
+
+			else if (object.pos.x < 0 && object.velocity.x < 0) // left hand
+			{
+
+				object.velocity = randomNess(object.velocity, true, 40);
+
+				object.velocity.x = -object.velocity.x;
+
+			}
+
+			if (object.pos.y > DISPLAY_HEIGHT - 10 && object.velocity.y > 0) // top
+			{
+
+				object.velocity = randomNess(object.velocity, false, 40);
+
+				object.velocity.y = -object.velocity.y;
+
+			}
+
+			else if (object.pos.y < 0 && object.velocity.y < 0) // bottom
+			{
+
+				isAlive = false;
+				UpdateScore();
+				paddle = { DISPLAY_WIDTH / 2 ,DISPLAY_HEIGHT / 10 };
+				object.velocity = { 0, 0 };
+			}
+
+			if (IsPaddleColliding(object))
+			{
+
+				//int soundID = Play::PlayAudio("error1");
+				object.velocity.y = -object.velocity.y;
+				object.pos.y = object.pos.y + 5;
+
+			}
+
+			Play::UpdateGameObject(object);
+
+			Play::DrawObject(object);
+		}
+
+		//bricks
+		for (int i = 0; i < BrickIds.size(); i++)
+		{
+			Play::GameObject& brickObject = Play::GetGameObject(BrickIds[i]);
+			Play::DrawObject(brickObject);
+			Play::CentreAllSpriteOrigins();
+
+			for (int y = 0; y < ballIds.size(); y++)
+			{
+				Play::GameObject& ballObject = Play::GetGameObject(ballIds[y]);
+
+				if (Play::IsColliding(Play::GetGameObject(BrickIds[i]), Play::GetGameObject(ballIds[y])))
 				{
-					ballObject.velocity.x = -ballObject.velocity.x;
-					Play::DestroyGameObject(BrickIds[i]);
-					score++;
+					Play::UpdateGameObject(brickObject);
+
+					if (ballObject.pos.x <= brickObject.pos.x && (ballObject.velocity.x <= 0) || ballObject.pos.x >= brickObject.pos.x && (ballObject.velocity.x >= 0))
+					{
+						ballObject.velocity.y = -ballObject.velocity.y;
+						Play::DestroyGameObject(BrickIds[i]);
+						score++;
+					}
+
+					else if (ballObject.pos.y <= brickObject.pos.y && (ballObject.velocity.y <= 0) || ballObject.pos.y >= brickObject.pos.y && (ballObject.velocity.y >= 0))
+					{
+						ballObject.velocity.x = -ballObject.velocity.x;
+						Play::DestroyGameObject(BrickIds[i]);
+						score++;
+					}
 				}
 			}
 		}
+	}
+	
+	else
+	{
+		DeathScreen();
+		DrawEndScore();
 	}
 }

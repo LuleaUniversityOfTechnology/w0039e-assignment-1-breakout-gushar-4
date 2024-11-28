@@ -13,7 +13,7 @@ void MainGameEntry(PLAY_IGNORE_COMMAND_LINE)
 {
 	Play::CreateManager(DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE);
 
-	SetupScene(14);
+	SetupScene(15);
 
 	// 16248 limit
 
@@ -31,8 +31,9 @@ bool MainGameUpdate( float elapsedTime )
 	Play::ClearDrawingBuffer( Play::cBlack );
 
 	StepFrame(elapsedTime);
-
 	DrawPaddle();
+	DrawScore();
+	
 
 	Play::PresentDrawingBuffer();
 	return Play::KeyDown( KEY_ESCAPE );
