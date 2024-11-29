@@ -6,10 +6,10 @@
 
 Paddle paddle;
 
-int score = 0;
-int highScores[5] = {1,2,3,4,5};
-
 bool isAlive = true;
+
+int score = 0;
+int highScores[5] = {5,4,3,2,1};
 
 void SpawnBall(float ballSpeed, int ballX, int ballY)
 {
@@ -122,7 +122,15 @@ void DrawScore()
 
 void UpdateScore()
 {
+	for (int i = 0; i < sizeof(highScores) / sizeof(highScores[0]); i++)
+	{
+		if (score > highScores[i])
+		{
+			highScores[i] = score;
 
+			break;
+		}
+	}
 
 }
 
@@ -132,7 +140,7 @@ void DrawEndScore()
 	{
 		std::string s = std::to_string(highScores[i]);
 		char const* pchar = s.c_str();
-		Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3 + 30 + i * 20 }, pchar, Play::cWhite, true);
+		Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 50 - i * 20 }, pchar, Play::cWhite, true);
 	}
 }
 
@@ -140,8 +148,12 @@ void DeathScreen()
 {
 
 	std::string s = "u died lol";
-	char const* pchar = s.c_str();
-	Play::DrawDebugText({ DISPLAY_WIDTH /2, DISPLAY_HEIGHT / 3 }, pchar, Play::cRed, true);
+	char const* deathmessage = s.c_str();
+	Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3 }, deathmessage, Play::cRed, true);
+
+	std::string e = "High Score";
+	char const* highscore = e.c_str();
+	Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 80 }, highscore, Play::cRed, true);
 
 }
 
@@ -206,13 +218,24 @@ void StepFrame(float elapsedTime)
 				isAlive = false;
 				UpdateScore();
 				paddle = { DISPLAY_WIDTH / 2 ,DISPLAY_HEIGHT / 10 };
-				object.velocity = { 0, 0 };
+				object.pos = { DISPLAY_WIDTH / 2 ,DISPLAY_HEIGHT / 2 };
+				int pitchSoundID = Play::PlayAudioPitch("error1", 20, 21);
+
+				for (int c = 0; c < ballIds.size(); c++)
+				{
+					Play::DestroyGameObject(ballIds[c]);
+				}
+
+				for (int z = 0; z < BrickIds.size(); z++)
+				{
+					Play::DestroyGameObject(BrickIds[z]);
+				}
+				break;
 			}
 
 			if (IsPaddleColliding(object))
 			{
-
-				//int soundID = Play::PlayAudio("error1");
+				int pitchSoundID = Play::PlayAudioPitch("error1", score + 50, score + 51);
 				object.velocity.y = -object.velocity.y;
 				object.pos.y = object.pos.y + 5;
 
@@ -260,5 +283,15 @@ void StepFrame(float elapsedTime)
 	{
 		DeathScreen();
 		DrawEndScore();
+
+		if (isAlive == false && Play::KeyDown(KEY_ENTER))
+		{
+			score = 0;
+			isAlive = true;
+			SetupScene(15);
+			SpawnBall(4, 0, -70);
+			
+		}
+
 	}
 }

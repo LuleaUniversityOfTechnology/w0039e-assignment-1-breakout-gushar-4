@@ -23,6 +23,7 @@ void MainGameEntry(PLAY_IGNORE_COMMAND_LINE)
 		SpawnBall(4, 0, -70);
 
 	}
+
 }
 
 // Called by PlayBuffer every frame (60 times a second!)
@@ -33,7 +34,6 @@ bool MainGameUpdate( float elapsedTime )
 	StepFrame(elapsedTime);
 	DrawPaddle();
 	DrawScore();
-	
 
 	Play::PresentDrawingBuffer();
 	return Play::KeyDown( KEY_ESCAPE );
