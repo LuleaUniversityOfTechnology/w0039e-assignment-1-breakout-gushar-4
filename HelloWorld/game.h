@@ -1,16 +1,13 @@
 #pragma once
 #define PLAY_USING_GAMEOBJECT_MANAGER
 #include "Play.h"
-
-
+#include "paddle.h"
 
 void SpawnBall(float ballSpeed, int ballX, int ballY);
 
 void SetupScene(int range);
 
 void StepFrame(float elapsedTime);
-
-void DrawPaddle();
 
 void DrawScore();
 

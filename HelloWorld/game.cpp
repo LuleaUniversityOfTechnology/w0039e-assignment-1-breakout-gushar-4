@@ -2,14 +2,17 @@
 #define PLAY_USING_GAMEOBJECT_MANAGER
 #include "Play.h"
 #include "constants.h"
+#include "paddle.h"
 #include "game.h"
-
-Paddle paddle;
 
 bool isAlive = true;
 
+Paddle paddle;
+
 int score = 0;
-int highScores[5] = {5,4,3,2,1};
+int highScores[5];
+
+int ScoreSize = 5;
 
 void SpawnBall(float ballSpeed, int ballX, int ballY)
 {
@@ -33,12 +36,7 @@ void SpawnBall(float ballSpeed, int ballX, int ballY)
 
 void SetupScene(int range)
 {
-
-	paddle.x = DISPLAY_WIDTH / 2;
-	paddle.y = DISPLAY_HEIGHT / 10;
-
-	//Play::CreateGameObject(ObjectType::TYPE_BRICK, { DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 }, 6, "brick");
-	//Play::CreateGameObject(ObjectType::TYPE_BRICK, { DISPLAY_WIDTH / 2 + 20, DISPLAY_HEIGHT / 2 }, 6, "brick");
+	paddle = { DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 10 };
 
 	for (int i = -range; i < range + 1; i++)
 	{
@@ -52,52 +50,15 @@ void SetupScene(int range)
 
 }
 
-void DrawPaddle()
-{
-	if (isAlive == true)
-	{
-		if (Play::KeyDown(Play::KEY_LEFT) && !(paddle.x - 60 < 0))
-		{
-			paddle.x = paddle.x - 5;
-		}
-
-		if (Play::KeyDown(Play::KEY_RIGHT) && !(paddle.x + 60 > DISPLAY_WIDTH))
-		{
-			paddle.x = paddle.x + 5;
-		}
-	}
-
-	Play::Point2D RectBottom = { paddle.x + 50, paddle.y + 5 };
-
-	Play::Point2D RectTop = { paddle.x + -50, paddle.y + -5 };
-
-	Play::DrawRect(RectTop, RectBottom, Play::cWhite, true);
-}
 
 int Min(int x, int y)
 {
-	if (x < y)
-	{
-		return x;
-	}
-	else if (x > y)
-	{
-		return y;
-	}
-	else return y;
+	return x < y ? x : y;
 }
 
 int Max(int x, int y)
 {
-	if (x > y)
-	{
-		return x;
-	}
-	else if (x > y)
-	{
-		return y;
-	}
-	else return y;
+	return x > y ? x : y;
 }
 
 bool IsPaddleColliding(Play::GameObject& obj)
@@ -122,21 +83,30 @@ void DrawScore()
 
 void UpdateScore()
 {
-	for (int i = 0; i < sizeof(highScores) / sizeof(highScores[0]); i++)
+	
+
+	for (int i = 0; i < ScoreSize; i++)
 	{
+
 		if (score > highScores[i])
 		{
+			for (int y = ScoreSize -1; y > i; y--)
+			{
+				highScores[y] = highScores[y - 1];
+			}
+
 			highScores[i] = score;
 
 			break;
 		}
+
 	}
 
 }
 
 void DrawEndScore()
 {
-	for (int i = 0; i < sizeof(highScores) / sizeof(highScores[0]); i++)
+	for (int i = 0; i < 5; i++)
 	{
 		std::string s = std::to_string(highScores[i]);
 		char const* pchar = s.c_str();
@@ -147,7 +117,7 @@ void DrawEndScore()
 void DeathScreen()
 {
 
-	std::string s = "u died lol";
+	std::string s = "u died";
 	char const* deathmessage = s.c_str();
 	Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3 }, deathmessage, Play::cRed, true);
 
@@ -173,8 +143,21 @@ Play::Vector2D randomNess(Play::Vector2D obj, bool randomizeY, int Ness)
 
 void StepFrame(float elapsedTime)
 {
+	
+	DrawPaddle(paddle);
+
 	if (isAlive == true)
 	{
+		if (Play::KeyDown(Play::KEY_LEFT) && !(paddle.x - 60 < 0))
+		{
+			paddle.x = paddle.x - 5;
+		}
+
+		if (Play::KeyDown(Play::KEY_RIGHT) && !(paddle.x + 60 > DISPLAY_WIDTH))
+		{
+			paddle.x = paddle.x + 5;
+		}
+
 		const std::vector<int> ballIds = Play::CollectGameObjectIDsByType(TYPE_BALL);
 
 		const std::vector<int> BrickIds = Play::CollectGameObjectIDsByType(TYPE_BRICK);
@@ -235,7 +218,7 @@ void StepFrame(float elapsedTime)
 
 			if (IsPaddleColliding(object))
 			{
-				int pitchSoundID = Play::PlayAudioPitch("error1", score + 50, score + 51);
+				//int pitchSoundID = Play::PlayAudioPitch("error1", score + 50, score + 51);
 				object.velocity.y = -object.velocity.y;
 				object.pos.y = object.pos.y + 5;
 
@@ -263,6 +246,7 @@ void StepFrame(float elapsedTime)
 
 					if (ballObject.pos.x <= brickObject.pos.x && (ballObject.velocity.x <= 0) || ballObject.pos.x >= brickObject.pos.x && (ballObject.velocity.x >= 0))
 					{
+						//int pitchSoundID = Play::PlayAudioPitch("error1", score + 50, score + 51);
 						ballObject.velocity.y = -ballObject.velocity.y;
 						Play::DestroyGameObject(BrickIds[i]);
 						score++;
@@ -270,6 +254,7 @@ void StepFrame(float elapsedTime)
 
 					else if (ballObject.pos.y <= brickObject.pos.y && (ballObject.velocity.y <= 0) || ballObject.pos.y >= brickObject.pos.y && (ballObject.velocity.y >= 0))
 					{
+						//int pitchSoundID = Play::PlayAudioPitch("error1", score + 50, score + 51);
 						ballObject.velocity.x = -ballObject.velocity.x;
 						Play::DestroyGameObject(BrickIds[i]);
 						score++;

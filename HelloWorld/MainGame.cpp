@@ -2,7 +2,7 @@
 #include "Play.h"
 #include "constants.h"
 #include "game.h"
-
+#include "paddle.h"
 
 using namespace Play;
 
@@ -14,15 +14,9 @@ void MainGameEntry(PLAY_IGNORE_COMMAND_LINE)
 	Play::CreateManager(DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE);
 
 	SetupScene(15);
-
+	SpawnBall(4, 0, -70);
 	// 16248 limit
 
-	for (int i = 0; i < 1; i++)
-	{
-
-		SpawnBall(4, 0, -70);
-
-	}
 
 }
 
@@ -32,7 +26,6 @@ bool MainGameUpdate( float elapsedTime )
 	Play::ClearDrawingBuffer( Play::cBlack );
 
 	StepFrame(elapsedTime);
-	DrawPaddle();
 	DrawScore();
 
 	Play::PresentDrawingBuffer();
