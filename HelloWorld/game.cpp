@@ -2,17 +2,14 @@
 #define PLAY_USING_GAMEOBJECT_MANAGER
 #include "Play.h"
 #include "constants.h"
-#include "paddle.h"
+#include "Paddle.h"
 #include "game.h"
+#include "Score.h"
 
 bool isAlive = true;
 
 Paddle paddle;
 
-int score = 0;
-int highScores[5];
-
-int ScoreSize = 5;
 
 void SpawnBall(float ballSpeed, int ballX, int ballY)
 {
@@ -73,59 +70,6 @@ bool IsPaddleColliding(Play::GameObject& obj)
 	return (dx * dx + dy * dy) < (obj.radius * obj.radius);
 }
 
-void DrawScore()
-{
-	std::string s = std::to_string(score);
-	char const* pchar = s.c_str();
-
-	Play::DrawDebugText({ paddle.x, paddle.y - 20 }, pchar, Play::cMagenta, true);
-}
-
-void UpdateScore()
-{
-	
-
-	for (int i = 0; i < ScoreSize; i++)
-	{
-
-		if (score > highScores[i])
-		{
-			for (int y = ScoreSize -1; y > i; y--)
-			{
-				highScores[y] = highScores[y - 1];
-			}
-
-			highScores[i] = score;
-
-			break;
-		}
-
-	}
-
-}
-
-void DrawEndScore()
-{
-	for (int i = 0; i < 5; i++)
-	{
-		std::string s = std::to_string(highScores[i]);
-		char const* pchar = s.c_str();
-		Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 50 - i * 20 }, pchar, Play::cWhite, true);
-	}
-}
-
-void DeathScreen()
-{
-
-	std::string s = "u died";
-	char const* deathmessage = s.c_str();
-	Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 3 }, deathmessage, Play::cRed, true);
-
-	std::string e = "High Score";
-	char const* highscore = e.c_str();
-	Play::DrawDebugText({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 + 80 }, highscore, Play::cRed, true);
-
-}
 
 Play::Vector2D randomNess(Play::Vector2D obj, bool randomizeY, int Ness)
 {
@@ -143,6 +87,7 @@ Play::Vector2D randomNess(Play::Vector2D obj, bool randomizeY, int Ness)
 
 void StepFrame(float elapsedTime)
 {
+	DrawScore(paddle);
 	
 	DrawPaddle(paddle);
 
@@ -156,7 +101,7 @@ void StepFrame(float elapsedTime)
 		if (Play::KeyDown(Play::KEY_RIGHT) && !(paddle.x + 60 > DISPLAY_WIDTH))
 		{
 			paddle.x = paddle.x + 5;
-		}
+		} 
 
 		const std::vector<int> ballIds = Play::CollectGameObjectIDsByType(TYPE_BALL);
 
@@ -249,7 +194,7 @@ void StepFrame(float elapsedTime)
 						//int pitchSoundID = Play::PlayAudioPitch("error1", score + 50, score + 51);
 						ballObject.velocity.y = -ballObject.velocity.y;
 						Play::DestroyGameObject(BrickIds[i]);
-						score++;
+						ChangeScore(true);
 					}
 
 					else if (ballObject.pos.y <= brickObject.pos.y && (ballObject.velocity.y <= 0) || ballObject.pos.y >= brickObject.pos.y && (ballObject.velocity.y >= 0))
@@ -257,7 +202,7 @@ void StepFrame(float elapsedTime)
 						//int pitchSoundID = Play::PlayAudioPitch("error1", score + 50, score + 51);
 						ballObject.velocity.x = -ballObject.velocity.x;
 						Play::DestroyGameObject(BrickIds[i]);
-						score++;
+						ChangeScore(true);
 					}
 				}
 			}
@@ -271,7 +216,7 @@ void StepFrame(float elapsedTime)
 
 		if (isAlive == false && Play::KeyDown(KEY_ENTER))
 		{
-			score = 0;
+			ChangeScore(false);
 			isAlive = true;
 			SetupScene(15);
 			SpawnBall(4, 0, -70);

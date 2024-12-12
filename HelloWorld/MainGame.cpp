@@ -3,6 +3,7 @@
 #include "constants.h"
 #include "game.h"
 #include "paddle.h"
+#include "Score.h"
 
 using namespace Play;
 
@@ -13,6 +14,7 @@ void MainGameEntry(PLAY_IGNORE_COMMAND_LINE)
 {
 	Play::CreateManager(DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_SCALE);
 
+	ScoreFileRead();
 	SetupScene(15);
 	SpawnBall(4, 0, -70);
 	// 16248 limit
@@ -26,7 +28,6 @@ bool MainGameUpdate( float elapsedTime )
 	Play::ClearDrawingBuffer( Play::cBlack );
 
 	StepFrame(elapsedTime);
-	DrawScore();
 
 	Play::PresentDrawingBuffer();
 	return Play::KeyDown( KEY_ESCAPE );
@@ -35,6 +36,7 @@ bool MainGameUpdate( float elapsedTime )
 // Gets called once when the player quits the game 
 int MainGameExit( void )
 {
+	ScoreFileWrite();
 	Play::DestroyManager();
 	return PLAY_OK;
 }

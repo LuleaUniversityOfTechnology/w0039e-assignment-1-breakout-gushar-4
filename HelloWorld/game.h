@@ -7,15 +7,11 @@ void SpawnBall(float ballSpeed, int ballX, int ballY);
 
 void SetupScene(int range);
 
+int Min(int x, int y);
+
+int Max(int x, int y);
+
 void StepFrame(float elapsedTime);
-
-void DrawScore();
-
-void UpdateScore();
-
-void DrawEndScore();
-
-void DeathScreen();
 
 bool IsPaddleColliding(Play::GameObject& obj);
 
